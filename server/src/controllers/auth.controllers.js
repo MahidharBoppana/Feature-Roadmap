@@ -8,11 +8,11 @@ import {
   accessTokenCookieOptions,
   refreshTokenCookieOptions,
 } from "../utils/cookieOptions.js";
-import { sendEmail } from "../utils/sendEmail.js";
+import { sendEmail } from "../services/sendEmail.js";
 import {
   verificationEmailTemplate,
   passwordResetEmailTemplate,
-} from "../utils/emailTemplates.js";
+} from "../services/emailTemplates.js";
 
 const signup = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;

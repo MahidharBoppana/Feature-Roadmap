@@ -2,12 +2,15 @@ import Feature from "../models/Feature.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { validateObjectId } from "../utils/validateObjectId.js";
 
 const allowedStatuses = ["under_review", "planned", "in_progress", "completed"];
 
 const updateFeatureStatus = asyncHandler(async (req, res) => {
   const { featureId } = req.params;
   const { status } = req.body;
+
+  validateObjectId(featureId, "feature ID");
 
   if (!status) {
     throw new ApiError(400, "Status is required");

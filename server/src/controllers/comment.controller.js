@@ -4,10 +4,13 @@ import User from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { validateObjectId } from "../utils/validateObjectId.js";
 
 const createComment = asyncHandler(async (req, res) => {
   const { featureId } = req.params;
   const { content, parentComment } = req.body;
+
+  validateObjectId(featureId, "feature ID");
 
   if (!content?.trim()) {
     throw new ApiError(400, "Comment content is required");
@@ -62,6 +65,8 @@ const createComment = asyncHandler(async (req, res) => {
 const getFeatureComments = asyncHandler(async (req, res) => {
   const { featureId } = req.params;
 
+  validateObjectId(featureId, "feature ID");
+
   const feature = await Feature.exists({
     _id: featureId,
   });
@@ -90,6 +95,8 @@ const getFeatureComments = asyncHandler(async (req, res) => {
 const updateComment = asyncHandler(async (req, res) => {
   const { commentId } = req.params;
   const { content } = req.body;
+
+  validateObjectId(featureId, "comment ID");
 
   if (!content?.trim()) {
     throw new ApiError(400, "Comment content is required");
@@ -131,6 +138,8 @@ const updateComment = asyncHandler(async (req, res) => {
 
 const deleteComment = asyncHandler(async (req, res) => {
   const { commentId } = req.params;
+
+  validateObjectId(featureId, "comment ID");
 
   const comment = await Comment.findById(commentId);
 

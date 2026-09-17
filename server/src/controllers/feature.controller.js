@@ -2,6 +2,13 @@ import Feature from "../models/Feature.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { validateObjectId } from "../utils/validateObjectId.js";
+
+const allowedCategories = ["UI/UX", "Integrations", "Performance", "General"];
+
+const allowedStatuses = ["under_review", "planned", "in_progress", "completed"];
+
+const allowedSorts = ["upvoted", "discussed", "newest"];
 
 const createFeature = asyncHandler(async (req, res) => {
   const { title, description, category } = req.body;
@@ -38,8 +45,28 @@ const getFeatures = asyncHandler(async (req, res) => {
     search,
   } = req.query;
 
-  const currentPage = Math.max(Number(page), 1);
-  const perPage = Math.min(Math.max(Number(limit), 1), 50);
+  const currentPage = Number(page);
+  const perPage = Number(limit);
+
+  if (!Number.isInteger(currentPage) || currentPage < 1) {
+    throw new ApiError(400, "Page must be a positive integer");
+  }
+
+  if (!Number.isInteger(perPage) || perPage < 1 || perPage > 50) {
+    throw new ApiError(400, "Limit must be an integer between 1 and 50");
+  }
+
+  if (category && !allowedCategories.includes(category)) {
+    throw new ApiError(400, "Invalid category");
+  }
+
+  if (status && !allowedStatuses.includes(status)) {
+    throw new ApiError(400, "Invalid status");
+  }
+
+  if (!allowedSorts.includes(sort)) {
+    throw new ApiError(400, "Invalid sort option");
+  }
 
   const skip = (currentPage - 1) * perPage;
 
@@ -180,6 +207,8 @@ const getFeatures = asyncHandler(async (req, res) => {
 const getFeatureById = asyncHandler(async (req, res) => {
   const { featureId } = req.params;
 
+  validateObjectId(featureId, "feature ID");
+
   const feature = await Feature.findById(featureId).populate(
     "author",
     "name email",
@@ -204,6 +233,8 @@ const updateFeature = asyncHandler(async (req, res) => {
   const { featureId } = req.params;
 
   const { title, description, category } = req.body;
+
+  validateObjectId(featureId, "feature ID");
 
   const feature = await Feature.findById(featureId);
 
@@ -242,6 +273,8 @@ const updateFeature = asyncHandler(async (req, res) => {
 const deleteFeature = asyncHandler(async (req, res) => {
   const { featureId } = req.params;
 
+  validateObjectId(featureId, "feature ID");
+
   const feature = await Feature.findById(featureId);
 
   if (!feature) {
@@ -268,6 +301,8 @@ const deleteFeature = asyncHandler(async (req, res) => {
 
 const voteFeature = asyncHandler(async (req, res) => {
   const { featureId } = req.params;
+
+  validateObjectId(featureId, "feature ID");
 
   const feature = await Feature.findOneAndUpdate(
     {
@@ -314,6 +349,8 @@ const voteFeature = asyncHandler(async (req, res) => {
 
 const unvoteFeature = asyncHandler(async (req, res) => {
   const { featureId } = req.params;
+
+  validateObjectId(featureId, "feature ID");
 
   const feature = await Feature.findOneAndUpdate(
     {
