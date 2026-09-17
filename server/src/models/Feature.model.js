@@ -40,6 +40,12 @@ const featureSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
+
+    voteCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
   },
   {
     timestamps: true,
