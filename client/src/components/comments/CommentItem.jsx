@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import CommentComposer from "./CommentComposer";
+import MarkdownContent from "./MarkdownContent";
 
 const CommentItem = ({
   comment,
@@ -166,9 +167,9 @@ const CommentItem = ({
               </div>
             </div>
           ) : (
-            <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
-              {comment.content}
-            </p>
+            <div className="mt-2">
+              <MarkdownContent content={comment.content} />
+            </div>
           )}
 
           {/* Reply */}

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowUp, MessageCircle } from "lucide-react";
+import { ArrowBigUp, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { voteFeature, unvoteFeature } from "@/api/feature.api";
 import { useAuth } from "@/context/AuthContext";
@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import MarkdownContent from "@/components/comments/MarkdownContent";
 
 const statusLabels = {
   under_review: "Under Review",
@@ -46,8 +47,8 @@ const FeatureCard = ({ feature }) => {
     const previousVoteCount = voteCount;
     const previousHasVoted = hasVoted;
 
+    // Optimistic update
     setHasVoted(!hasVoted);
-
     setVoteCount((current) => (hasVoted ? current - 1 : current + 1));
 
     setVoting(true);
@@ -70,7 +71,6 @@ const FeatureCard = ({ feature }) => {
       setVoting(false);
     }
   };
-
   const authorName = feature.author?.name || "Unknown User";
 
   return (
@@ -91,10 +91,26 @@ const FeatureCard = ({ feature }) => {
         </div>
 
         {/* Description */}
-        <p className="mt-3 line-clamp-4 text-sm leading-6 text-muted-foreground">
-          {feature.description}
-        </p>
+        <div className="mt-3">
+          <div className="max-h-24 overflow-hidden text-sm text-muted-foreground">
+            <MarkdownContent
+              content={feature.description}
+              className="prose-p:my-1 prose-headings:my-1 prose-ul:my-1"
+            />
+          </div>
 
+          <Button
+            variant="link"
+            size="sm"
+            className="mt-2 h-auto px-0 font-bold"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/features/${feature._id}`);
+            }}
+          >
+            View more
+          </Button>
+        </div>
         {/* Category */}
         <div className="mt-4">
           <Badge variant="secondary">{feature.category}</Badge>
@@ -128,12 +144,13 @@ const FeatureCard = ({ feature }) => {
             <Button
               variant={hasVoted ? "default" : "outline"}
               size="sm"
-              onClick={handleVote}
-              disabled={voting}
-              className="shrink-0 gap-2"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleVote();
+              }}
             >
-              <ArrowUp className="h-4 w-4" />
-              <span>{voteCount}</span>
+              <ArrowBigUp className="mr-1 h-4 w-4" />
+              {feature.voteCount}
             </Button>
           </div>
         </div>

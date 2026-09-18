@@ -17,6 +17,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeSanitize from "rehype-sanitize";
+
 const categories = ["UI/UX", "Integrations", "Performance", "General"];
 
 const CreateFeatureDialog = ({ onFeatureCreated }) => {
@@ -29,6 +33,7 @@ const CreateFeatureDialog = ({ onFeatureCreated }) => {
   });
 
   const [loading, setLoading] = useState(false);
+  const [preview, setPreview] = useState(false);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -45,6 +50,8 @@ const CreateFeatureDialog = ({ onFeatureCreated }) => {
       description: "",
       category: "General",
     });
+
+    setPreview(false);
   };
 
   const handleSubmit = async (event) => {
@@ -150,20 +157,75 @@ const CreateFeatureDialog = ({ onFeatureCreated }) => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
 
-            <Textarea
-              id="description"
-              name="description"
-              placeholder="Describe the feature you would like to see..."
-              value={formData.description}
-              onChange={handleChange}
-              rows={7}
-              maxLength={5000}
-              required
-            />
+              {/* Write / Preview */}
+              <div className="flex items-center gap-1 border-b">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className={
+                    !preview
+                      ? "rounded-b-none border-b-2"
+                      : "rounded-b-none text-muted-foreground"
+                  }
+                  onClick={() => setPreview(false)}
+                >
+                  Write
+                </Button>
 
-            <p className="text-xs text-muted-foreground">Markdown supported.</p>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className={
+                    preview
+                      ? "rounded-b-none border-b-2"
+                      : "rounded-b-none text-muted-foreground"
+                  }
+                  onClick={() => setPreview(true)}
+                  disabled={!formData.description.trim()}
+                >
+                  Preview
+                </Button>
+              </div>
+
+              {!preview ? (
+                <Textarea
+                  id="description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  placeholder="Describe your feature request using Markdown..."
+                  rows={7}
+                />
+              ) : (
+                <div className="min-h-[180px] rounded-md border p-4">
+                  {formData.description.trim() ? (
+                    <div className="prose prose-sm max-w-none dark:prose-invert">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        rehypePlugins={[rehypeSanitize]}
+                      >
+                        {formData.description}
+                      </ReactMarkdown>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      Nothing to preview.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {!preview && (
+                <p className="text-xs text-muted-foreground">
+                  Markdown is supported. Minimum 10 characters.
+                </p>
+              )}
+            </div>
           </div>
 
           <div className="space-y-2">

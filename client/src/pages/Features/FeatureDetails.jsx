@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import MarkdownContent from "@/components/comments/MarkdownContent";
 
 const statusLabels = {
   under_review: "Under Review",
@@ -174,9 +175,9 @@ const FeatureDetails = () => {
           <div>
             <h2 className="text-sm font-semibold">Description</h2>
 
-            <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-muted-foreground">
-              {feature.description}
-            </p>
+            <div className="mt-3">
+              <MarkdownContent content={feature.description} />
+            </div>
           </div>
 
           <Separator className="my-6" />
