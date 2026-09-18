@@ -49,3 +49,14 @@ export const getFeatureComments = async (featureId) => {
 
   return response.data;
 };
+
+export const getRoadmapFeatures = async () => {
+  const response = await api.get("/features", {
+    params: {
+      limit: 50,
+      sort: "newest",
+    },
+  });
+
+  return response.data;
+};

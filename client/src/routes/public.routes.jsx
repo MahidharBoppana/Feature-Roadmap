@@ -1,5 +1,3 @@
-import Home from "@/pages/Home";
-
 // Auth Routes
 import Login from "@/pages/Auth/Login";
 import Signup from "@/pages/Auth/Signup";
@@ -10,6 +8,7 @@ import ResetPassword from "@/pages/Auth/ResetPassword";
 // Feature Routes
 import FeatureFeed from "@/pages/Features/FeatureFeed";
 import FeatureDetails from "@/pages/Features/FeatureDetails";
+import Roadmap from "@/pages/Roadmap";
 
 const publicRoutes = [
   {
@@ -45,6 +44,10 @@ const publicRoutes = [
   {
     path: "/features/:featureId",
     element: <FeatureDetails />,
+  },
+  {
+    path: "/roadmap",
+    element: <Roadmap />,
   },
 ];
 

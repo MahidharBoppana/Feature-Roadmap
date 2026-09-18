@@ -2,12 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowBigUp, MessageCircle, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import {
-  voteFeature,
-  unvoteFeature,
-  updateFeature,
-  deleteFeature,
-} from "@/api/feature.api";
+import { voteFeature, unvoteFeature, deleteFeature } from "@/api/feature.api";
 import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
