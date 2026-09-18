@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Feature from "../models/Feature.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -215,12 +216,73 @@ const getFeatureById = asyncHandler(async (req, res) => {
 
   validateObjectId(featureId, "feature ID");
 
-  const feature = await Feature.findById(featureId).populate(
-    "author",
-    "name email",
-  );
+  const feature = await Feature.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(featureId),
+      },
+    },
 
-  if (!feature) {
+    // Get comments for this feature
+    {
+      $lookup: {
+        from: "comments",
+        localField: "_id",
+        foreignField: "feature",
+        as: "comments",
+      },
+    },
+
+    // Calculate comment count
+    {
+      $addFields: {
+        commentCount: {
+          $size: "$comments",
+        },
+
+        hasVoted: req.user
+          ? {
+              $in: [req.user._id, "$votes"],
+            }
+          : false,
+      },
+    },
+
+    // Get author
+    {
+      $lookup: {
+        from: "users",
+        localField: "author",
+        foreignField: "_id",
+        as: "author",
+      },
+    },
+
+    {
+      $unwind: "$author",
+    },
+
+    {
+      $project: {
+        title: 1,
+        description: 1,
+        category: 1,
+        status: 1,
+        voteCount: 1,
+        hasVoted: 1,
+        commentCount: 1,
+        createdAt: 1,
+        updatedAt: 1,
+
+        author: {
+          _id: "$author._id",
+          name: "$author.name",
+        },
+      },
+    },
+  ]);
+
+  if (!feature.length) {
     throw new ApiError(404, "Feature not found");
   }
 
@@ -228,7 +290,7 @@ const getFeatureById = asyncHandler(async (req, res) => {
     new ApiResponse(
       200,
       {
-        feature,
+        feature: feature[0],
       },
       "Feature fetched successfully",
     ),

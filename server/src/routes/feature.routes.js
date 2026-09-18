@@ -17,7 +17,7 @@ const router = express.Router();
 
 router.get("/", optionalAuth, getFeatures);
 
-router.get("/:featureId", getFeatureById);
+router.get("/:featureId", optionalAuth, getFeatureById);
 
 router.post("/", verifyJWT, createFeature);
 

@@ -96,7 +96,7 @@ const updateComment = asyncHandler(async (req, res) => {
   const { commentId } = req.params;
   const { content } = req.body;
 
-  validateObjectId(featureId, "comment ID");
+  validateObjectId(commentId, "comment ID");
 
   if (!content?.trim()) {
     throw new ApiError(400, "Comment content is required");
@@ -139,7 +139,7 @@ const updateComment = asyncHandler(async (req, res) => {
 const deleteComment = asyncHandler(async (req, res) => {
   const { commentId } = req.params;
 
-  validateObjectId(featureId, "comment ID");
+  validateObjectId(commentId, "comment ID");
 
   const comment = await Comment.findById(commentId);
 
@@ -158,11 +158,39 @@ const deleteComment = asyncHandler(async (req, res) => {
     );
   }
 
-  await comment.deleteOne();
+  const deletedIds = [];
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, null, "Comment deleted successfully"));
+  const collectDescendants = async (parentId) => {
+    const children = await Comment.find({
+      parentComment: parentId,
+    }).select("_id");
+
+    for (const child of children) {
+      deletedIds.push(child._id.toString());
+
+      await collectDescendants(child._id);
+    }
+  };
+
+  deletedIds.push(commentId);
+
+  await collectDescendants(commentId);
+
+  await Comment.deleteMany({
+    _id: {
+      $in: deletedIds,
+    },
+  });
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        deletedIds,
+      },
+      "Comment and its replies deleted successfully",
+    ),
+  );
 });
 
 export { createComment, getFeatureComments, updateComment, deleteComment };
