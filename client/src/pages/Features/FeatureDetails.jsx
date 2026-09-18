@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, ArrowUp, MessageCircle } from "lucide-react";
+import { ArrowLeft, ArrowBigUp, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 
 import { getFeatureById, voteFeature, unvoteFeature } from "@/api/feature.api";
@@ -161,7 +161,7 @@ const FeatureDetails = () => {
               disabled={voting}
               className="shrink-0 gap-2"
             >
-              <ArrowUp className="h-4 w-4" />
+              <ArrowBigUp className="h-4 w-4" />
 
               {feature.hasVoted ? "Upvoted" : "Upvote"}
 

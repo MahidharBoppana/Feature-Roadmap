@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -301,8 +302,10 @@ const logout = asyncHandler(async (req, res) => {
 const refreshAccessToken = asyncHandler(async (req, res) => {
   const incomingRefreshToken = req.cookies?.refreshToken;
 
+  console.log("REFRESH COOKIE:", !!incomingRefreshToken);
+
   if (!incomingRefreshToken) {
-    throw new ApiError(401, "Refresh token is required");
+    throw new ApiError(401, "Refresh token is missing");
   }
 
   let decodedToken;
@@ -312,26 +315,36 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       incomingRefreshToken,
       process.env.JWT_REFRESH_SECRET,
     );
-  } catch {
+
+    console.log("REFRESH TOKEN VALID:", decodedToken);
+  } catch (error) {
+    console.log("REFRESH VERIFY ERROR:", error.message);
     throw new ApiError(401, "Invalid or expired refresh token");
   }
 
-  const user = await User.findById(decodedToken?._id).select("+refreshToken");
+  const user = await User.findById(decodedToken._id).select("+refreshToken");
+
+  console.log("USER FOUND:", !!user);
+  console.log(
+    "TOKEN MATCH:",
+    user ? user.refreshToken === incomingRefreshToken : false,
+  );
 
   if (!user) {
-    throw new ApiError(401, "Invalid refresh token");
+    throw new ApiError(401, "User not found");
   }
 
   if (user.refreshToken !== incomingRefreshToken) {
-    throw new ApiError(401, "Refresh token is expired or already used");
+    throw new ApiError(401, "Refresh token is invalid or has been rotated");
   }
 
   const newAccessToken = user.generateAccessToken();
-
   const newRefreshToken = user.generateRefreshToken();
 
-  await User.findByIdAndUpdate(user._id, {
-    refreshToken: newRefreshToken,
+  user.refreshToken = newRefreshToken;
+
+  await user.save({
+    validateBeforeSave: false,
   });
 
   return res
@@ -342,13 +355,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       new ApiResponse(
         200,
         {
-          user: {
-            id: user._id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            isEmailVerified: user.isEmailVerified,
-          },
+          accessToken: newAccessToken,
         },
         "Access token refreshed successfully",
       ),

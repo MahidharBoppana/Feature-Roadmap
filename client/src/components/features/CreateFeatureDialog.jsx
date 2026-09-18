@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-
-import { createFeature } from "@/api/feature.api";
+import { createFeature, updateFeature } from "@/api/feature.api";
 
 import {
   Dialog,
@@ -23,8 +22,27 @@ import rehypeSanitize from "rehype-sanitize";
 
 const categories = ["UI/UX", "Integrations", "Performance", "General"];
 
-const CreateFeatureDialog = ({ onFeatureCreated }) => {
-  const [open, setOpen] = useState(false);
+const CreateFeatureDialog = ({
+  onFeatureCreated,
+  onFeatureUpdated,
+  mode = "create",
+  feature = null,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
+}) => {
+  const isEditMode = mode === "edit";
+
+  const [internalOpen, setInternalOpen] = useState(false);
+
+  const open = isEditMode ? controlledOpen : internalOpen;
+
+  const setOpen = (value) => {
+    if (isEditMode) {
+      controlledOnOpenChange?.(value);
+    } else {
+      setInternalOpen(value);
+    }
+  };
 
   const [formData, setFormData] = useState({
     title: "",
@@ -34,6 +52,26 @@ const CreateFeatureDialog = ({ onFeatureCreated }) => {
 
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+
+    if (isEditMode && feature) {
+      setFormData({
+        title: feature.title || "",
+        description: feature.description || "",
+        category: feature.category || "General",
+      });
+    } else {
+      setFormData({
+        title: "",
+        description: "",
+        category: "General",
+      });
+    }
+
+    setPreview(false);
+  }, [open, isEditMode, feature]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -57,22 +95,25 @@ const CreateFeatureDialog = ({ onFeatureCreated }) => {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (!formData.title.trim()) {
+    const title = formData.title.trim();
+    const description = formData.description.trim();
+
+    if (!title) {
       toast.error("Feature title is required.");
       return;
     }
 
-    if (formData.title.trim().length < 5) {
+    if (title.length < 5) {
       toast.error("Title must be at least 5 characters.");
       return;
     }
 
-    if (!formData.description.trim()) {
+    if (!description) {
       toast.error("Feature description is required.");
       return;
     }
 
-    if (formData.description.trim().length < 10) {
+    if (description.length < 10) {
       toast.error("Description must be at least 10 characters.");
       return;
     }
@@ -80,32 +121,46 @@ const CreateFeatureDialog = ({ onFeatureCreated }) => {
     setLoading(true);
 
     try {
-      const response = await createFeature({
-        title: formData.title.trim(),
-        description: formData.description.trim(),
-        category: formData.category,
-      });
+      let response;
 
-      toast.success(
-        response.message || "Feature request created successfully.",
-      );
+      if (isEditMode) {
+        response = await updateFeature(feature._id, {
+          title,
+          description,
+          category: formData.category,
+        });
+
+        toast.success(response.message || "Feature updated successfully.");
+
+        onFeatureUpdated?.(response.data.feature);
+      } else {
+        response = await createFeature({
+          title,
+          description,
+          category: formData.category,
+        });
+
+        toast.success(
+          response.message || "Feature request created successfully.",
+        );
+
+        onFeatureCreated?.(response.data.feature);
+      }
 
       resetForm();
       setOpen(false);
-
-      onFeatureCreated?.(response.data.feature);
     } catch (error) {
       if (error.isAuthError || error.response?.status === 401) {
         toast.error("Your session has expired. Please login again.");
 
         setOpen(false);
         resetForm();
-
         return;
       }
 
       toast.error(
-        error.response?.data?.message || "Unable to create feature request.",
+        error.response?.data?.message ||
+          `Unable to ${isEditMode ? "update" : "create"} feature request.`,
       );
     } finally {
       setLoading(false);
@@ -123,21 +178,28 @@ const CreateFeatureDialog = ({ onFeatureCreated }) => {
         }
       }}
     >
-      <DialogTrigger asChild>
-        <Button>Create Feature</Button>
-      </DialogTrigger>
+      {!isEditMode && (
+        <DialogTrigger asChild>
+          <Button>Create Feature</Button>
+        </DialogTrigger>
+      )}
 
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Create a feature request</DialogTitle>
+          <DialogTitle>
+            {isEditMode ? "Edit feature request" : "Create a feature request"}
+          </DialogTitle>
 
           <DialogDescription>
-            Tell the community what feature you'd like to see. You can use
-            Markdown in the description.
+            {isEditMode
+              ? "Update your feature request. Markdown is supported."
+              : "Tell the community what feature you'd like to see. You can use Markdown in the description."}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Title */}
+
           <div className="space-y-2">
             <Label htmlFor="title">Title</Label>
 
@@ -156,77 +218,80 @@ const CreateFeatureDialog = ({ onFeatureCreated }) => {
             </p>
           </div>
 
+          {/* Description */}
+
           <div className="space-y-2">
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">Description</Label>
 
-              {/* Write / Preview */}
-              <div className="flex items-center gap-1 border-b">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className={
-                    !preview
-                      ? "rounded-b-none border-b-2"
-                      : "rounded-b-none text-muted-foreground"
-                  }
-                  onClick={() => setPreview(false)}
-                >
-                  Write
-                </Button>
+            {/* Write / Preview */}
 
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className={
-                    preview
-                      ? "rounded-b-none border-b-2"
-                      : "rounded-b-none text-muted-foreground"
-                  }
-                  onClick={() => setPreview(true)}
-                  disabled={!formData.description.trim()}
-                >
-                  Preview
-                </Button>
-              </div>
+            <div className="flex items-center gap-1 border-b">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className={
+                  !preview
+                    ? "rounded-b-none border-b-2"
+                    : "rounded-b-none text-muted-foreground"
+                }
+                onClick={() => setPreview(false)}
+              >
+                Write
+              </Button>
 
-              {!preview ? (
-                <Textarea
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  placeholder="Describe your feature request using Markdown..."
-                  rows={7}
-                />
-              ) : (
-                <div className="min-h-[180px] rounded-md border p-4">
-                  {formData.description.trim() ? (
-                    <div className="prose prose-sm max-w-none dark:prose-invert">
-                      <ReactMarkdown
-                        remarkPlugins={[remarkGfm]}
-                        rehypePlugins={[rehypeSanitize]}
-                      >
-                        {formData.description}
-                      </ReactMarkdown>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      Nothing to preview.
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {!preview && (
-                <p className="text-xs text-muted-foreground">
-                  Markdown is supported. Minimum 10 characters.
-                </p>
-              )}
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className={
+                  preview
+                    ? "rounded-b-none border-b-2"
+                    : "rounded-b-none text-muted-foreground"
+                }
+                onClick={() => setPreview(true)}
+                disabled={!formData.description.trim()}
+              >
+                Preview
+              </Button>
             </div>
+
+            {!preview ? (
+              <Textarea
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                placeholder="Describe your feature request using Markdown..."
+                rows={7}
+              />
+            ) : (
+              <div className="min-h-[180px] rounded-md border p-4">
+                {formData.description.trim() ? (
+                  <div className="prose prose-sm max-w-none dark:prose-invert">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      rehypePlugins={[rehypeSanitize]}
+                    >
+                      {formData.description}
+                    </ReactMarkdown>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Nothing to preview.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {!preview && (
+              <p className="text-xs text-muted-foreground">
+                Markdown is supported. Minimum 10 characters.
+              </p>
+            )}
           </div>
+
+          {/* Category */}
 
           <div className="space-y-2">
             <Label htmlFor="category">Category</Label>
@@ -246,8 +311,16 @@ const CreateFeatureDialog = ({ onFeatureCreated }) => {
             </select>
           </div>
 
+          {/* Submit */}
+
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Creating..." : "Create Feature"}
+            {loading
+              ? isEditMode
+                ? "Updating..."
+                : "Creating..."
+              : isEditMode
+                ? "Update Feature"
+                : "Create Feature"}
           </Button>
         </form>
       </DialogContent>

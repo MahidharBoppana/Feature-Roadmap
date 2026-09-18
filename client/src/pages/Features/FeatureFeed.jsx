@@ -38,6 +38,27 @@ const FeatureFeed = () => {
     }
   };
 
+  const handleFeatureUpdated = (updatedFeature) => {
+    setFeatures((currentFeatures) =>
+      currentFeatures.map((feature) =>
+        feature._id === updatedFeature._id
+          ? {
+              ...feature,
+              title: updatedFeature.title,
+              description: updatedFeature.description,
+              category: updatedFeature.category,
+            }
+          : feature,
+      ),
+    );
+  };
+
+  const handleFeatureDeleted = (featureId) => {
+    setFeatures((currentFeatures) =>
+      currentFeatures.filter((feature) => feature._id !== featureId),
+    );
+  };
+
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       fetchFeatures();
@@ -103,7 +124,12 @@ const FeatureFeed = () => {
       ) : (
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           {features.map((feature) => (
-            <FeatureCard key={feature._id} feature={feature} />
+            <FeatureCard
+              key={feature._id}
+              feature={feature}
+              onFeatureUpdated={handleFeatureUpdated}
+              onFeatureDeleted={handleFeatureDeleted}
+            />
           ))}
         </div>
       )}
