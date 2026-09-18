@@ -1,5 +1,4 @@
 import crypto from "crypto";
-import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -252,16 +251,24 @@ const resetPassword = asyncHandler(async (req, res) => {
     passwordResetExpiry: {
       $gt: new Date(),
     },
-  }).select("+passwordResetToken +passwordResetExpiry");
+  }).select("+password +passwordResetToken +passwordResetExpiry");
 
   if (!user) {
     throw new ApiError(400, "Invalid or expired password reset token");
   }
 
+  const isSamePassword = await user.isPasswordCorrect(password);
+
+  if (isSamePassword) {
+    throw new ApiError(
+      400,
+      "New password cannot be the same as your current password",
+    );
+  }
+
   user.password = password;
   user.passwordResetToken = undefined;
   user.passwordResetExpiry = undefined;
-
   user.refreshToken = null;
 
   await user.save();

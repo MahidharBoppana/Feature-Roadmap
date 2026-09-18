@@ -11,10 +11,11 @@ import {
 } from "../controllers/feature.controller.js";
 
 import { verifyJWT } from "../middleware/auth.middleware.js";
+import { optionalAuth } from "../middleware/optionalAuth.middleware.js";
 
 const router = express.Router();
 
-router.get("/", getFeatures);
+router.get("/", optionalAuth, getFeatures);
 
 router.get("/:featureId", getFeatureById);
 

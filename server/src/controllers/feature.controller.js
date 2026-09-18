@@ -160,6 +160,12 @@ const getFeatures = asyncHandler(async (req, res) => {
       },
 
       {
+        $addFields: {
+          hasVoted: req.user ? { $in: [req.user._id, "$votes"] } : false,
+        },
+      },
+
+      {
         $project: {
           title: 1,
           description: 1,
@@ -167,7 +173,7 @@ const getFeatures = asyncHandler(async (req, res) => {
           status: 1,
           createdAt: 1,
           updatedAt: 1,
-
+          hasVoted: 1,
           voteCount: 1,
           commentCount: 1,
 
