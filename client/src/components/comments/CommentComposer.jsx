@@ -66,9 +66,9 @@ const CommentComposer = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
+    <form onSubmit={handleSubmit} className="w-full min-w-0 space-y-3">
       {/* Tabs */}
-      <div className="flex items-center gap-1 border-b">
+      <div className="flex items-center gap-1 border-b overflow-x-auto">
         <Button
           type="button"
           variant={!preview ? "ghost" : "ghost"}
@@ -113,9 +113,9 @@ const CommentComposer = ({
           disabled={loading}
         />
       ) : (
-        <div className="min-h-[120px] rounded-md border p-4">
+        <div className="min-h-[120px] w-full min-w-0 overflow-hidden rounded-md border p-3 sm:p-4">
           {content.trim() ? (
-            <div className="prose prose-sm max-w-none dark:prose-invert">
+            <div className="prose prose-sm max-w-none break-words dark:prose-invert">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeSanitize]}
@@ -135,10 +135,11 @@ const CommentComposer = ({
         </p>
       )}
 
-      <div className="flex justify-end gap-2">
+      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <Button
           type="button"
           variant="ghost"
+          className="w-full sm:w-auto"
           onClick={() => {
             setContent("");
             setPreview(false);
@@ -149,7 +150,11 @@ const CommentComposer = ({
           Cancel
         </Button>
 
-        <Button type="submit" disabled={loading || !content.trim()}>
+        <Button
+          type="submit"
+          className="w-full sm:w-auto"
+          disabled={loading || !content.trim()}
+        >
           {loading
             ? "Posting..."
             : parentComment

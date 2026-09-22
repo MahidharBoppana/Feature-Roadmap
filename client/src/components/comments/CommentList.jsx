@@ -72,7 +72,7 @@ const CommentList = ({ featureId, onCommentCountChange }) => {
   if (loading) {
     return (
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <p className="text-sm text-muted-foreground">Loading comments...</p>
         </CardContent>
       </Card>
@@ -81,7 +81,7 @@ const CommentList = ({ featureId, onCommentCountChange }) => {
 
   return (
     <Card>
-      <CardContent className="p-6">
+      <CardContent className="min-w-0 p-4 sm:p-6">
         {/* New comment */}
         <CommentComposer
           featureId={featureId}
@@ -98,7 +98,7 @@ const CommentList = ({ featureId, onCommentCountChange }) => {
             </p>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="min-w-0 space-y-6">
             {rootComments.map((comment) => (
               <CommentItem
                 key={comment._id}

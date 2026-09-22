@@ -88,7 +88,7 @@ const CommentItem = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-3">
+      <div className="flex min-w-0 gap-2 sm:gap-3">
         {/* Avatar */}
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-medium">
           {comment.author?.name?.charAt(0)?.toUpperCase() || "U"}
@@ -96,13 +96,13 @@ const CommentItem = ({
 
         <div className="min-w-0 flex-1">
           {/* Header */}
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <span className="text-sm font-medium">
+          <div className="flex min-w-0 items-start justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <span className="break-words text-sm font-medium">
                 {comment.author?.name || "Unknown User"}
               </span>
 
-              <span className="ml-2 text-xs text-muted-foreground">
+              <span className="ml-1 block text-xs text-muted-foreground sm:ml-2 sm:inline">
                 {new Date(comment.createdAt).toLocaleDateString("en-IN", {
                   day: "numeric",
                   month: "short",
@@ -151,23 +151,29 @@ const CommentItem = ({
                 disabled={saving}
               />
 
-              <div className="flex justify-end gap-2">
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                 <Button
                   variant="ghost"
                   size="sm"
+                  className="w-full sm:w-auto"
                   onClick={() => setEditing(false)}
                   disabled={saving}
                 >
                   Cancel
                 </Button>
 
-                <Button size="sm" onClick={handleUpdate} disabled={saving}>
+                <Button
+                  size="sm"
+                  className="w-full sm:w-auto"
+                  onClick={handleUpdate}
+                  disabled={saving}
+                >
                   {saving ? "Saving..." : "Save"}
                 </Button>
               </div>
             </div>
           ) : (
-            <div className="mt-2">
+            <div className="mt-2 min-w-0 max-w-full overflow-hidden break-words">
               <MarkdownContent content={comment.content} />
             </div>
           )}
@@ -186,7 +192,7 @@ const CommentItem = ({
           )}
 
           {replying && (
-            <div className="mt-3">
+            <div className="mt-3 min-w-0 max-w-full">
               <CommentComposer
                 featureId={featureId}
                 parentComment={comment._id}
@@ -198,7 +204,7 @@ const CommentItem = ({
 
           {/* Recursive replies */}
           {replies?.length > 0 && (
-            <div className="mt-5 space-y-5 border-l pl-5">
+            <div className="mt-5 ml-2 space-y-5 border-l pl-3 sm:ml-4 sm:pl-4">
               {replies.map((reply) => (
                 <CommentItem
                   key={reply._id}

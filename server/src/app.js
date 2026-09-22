@@ -29,12 +29,14 @@ app.use("/api/v1/healthcheck", (req, res) => {
 // Routes
 
 import authRoutes from "./routes/auth.routes.js";
+import userRoutes from "./routes/user.routes.js";
 import featureRoutes from "./routes/feature.routes.js";
 import commentRoutes from "./routes/comment.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
 import roadmapRoutes from "./routes/roadmap.routes.js";
 
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/features", featureRoutes);
 app.use("/api/v1", commentRoutes);
 app.use("/api/v1/admin", adminRoutes);
